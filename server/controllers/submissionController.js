@@ -11,6 +11,20 @@ const submitTask = async (req, res) => {
   try {
     // — any authenticated user can submit for any task
     // — a talent can "submit" an Open or Approved task
+    // Only the assigned talent can submit
+
+    const task = await Task.findById(taskId);
+
+    if (!task) {
+      return res.status(404).json({
+        message: "Task not found",
+      });
+    }
+    if (task.assignedTo.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        message: 'You are not authorized to submit this task',
+      });
+    }
 
     // Build the file URL from multer's saved file
     // with a different PORT or base URL
@@ -40,7 +54,16 @@ const submitTask = async (req, res) => {
 // @access Protect only — no admin guard
 const getSubmission = async (req, res) => {
   try {
-    const submission = await Submission.findOne({ taskId: req.params.taskId })
+    // if the role is admin then all the submission will be shown but if the role is talent then only their submission will be shown
+
+    const query={
+      taskId: req.params.taskId
+    }
+    if(req.user.role !=='Admin'){
+      query.talentId=req.user._id
+    }
+    
+    const submission = await Submission.findOne(query)
       .populate('talentId', 'name email');
 
     if (!submission) {
