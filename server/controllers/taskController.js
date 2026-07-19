@@ -1,5 +1,7 @@
 ﻿const Task = require('../models/Task');
 const Submission = require('../models/Submission');
+const User = require('../models/User');
+const simulateNotification = require('../utils/notificationSimulator');
 
 // @desc  Get all tasks
 // @route GET /api/tasks
@@ -50,6 +52,20 @@ const createTask = async (req, res) => {
       dueDate,
       createdBy: req.user._id,
     });
+    // Simulate notification only if the task is assigned
+    if (task.assignedTo) {
+      const assignedUser = await User.findById(task.assignedTo);
+
+      if (assignedUser) {
+        simulateNotification({
+          event: "Task Assigned",
+          recipientName: assignedUser.name,
+          recipientEmail: assignedUser.email,
+          taskTitle: task.title,
+          sender: req.user.name,
+        });
+      }
+    }
 
     res.status(201).json(task);
   } catch (error) {
@@ -84,12 +100,12 @@ const deleteTask = async (req, res) => {
   try {
     const task = await Task.findById(req.params.id);
     if (!task) return res.status(404).json({ message: 'Task not found' });
-    
+
     // will delete all the submission related to this task before deleting the task
     await Submission.deleteMany({ taskId: req.params.id });
 
     await Task.findByIdAndDelete(req.params.id);
-  
+
 
     res.json({ message: 'Task deleted ' });
   } catch (error) {

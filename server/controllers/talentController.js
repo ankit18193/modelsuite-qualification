@@ -1,4 +1,5 @@
 ﻿const Task = require('../models/Task');
+const simulateNotification = require('../utils/notificationSimulator');
 
 // @desc  Get all available (Open) tasks
 // @route GET /api/talent/tasks/available
@@ -50,6 +51,14 @@ const claimTask = async (req, res) => {
     task.status = 'Claimed';
     task.assignedTo = req.user._id;
     await task.save();
+    // Notify the talent that the task has been claimed 
+    simulateNotification({
+      event: "Task Claimed",
+      recipientName: req.user.name,
+      recipientEmail: req.user.email,
+      taskTitle: task.title,
+      sender: "Talent Portal",
+    });
 
     res.json(task);
   } catch (error) {
