@@ -18,6 +18,15 @@ const IconTasks = () => (
   </svg>
 );
 
+const IconBriefcaseBusiness = () => (
+  <svg className="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M10 10h.01" />
+    <path d="M13 5V3.5a1.5 1.5 0 0 0-1.5-1.5h-3A1.5 1.5 0 0 0 7 3.5V5" />
+    <path d="M18 11a15 15 0 0 1-16 0" />
+    <rect width="16" height="11" x="2" y="5" rx="1.5" />
+  </svg>
+);
+
 const IconLogout = () => (
   <svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
     <path d="M13 10H3M13 10l-3-3M13 10l-3 3"/>
@@ -28,6 +37,7 @@ const IconLogout = () => (
 const navItems = [
   { label: 'My Dashboard', path: '/talent/dashboard', Icon: IconDashboard },
   { label: 'My Tasks',     path: '/talent/tasks',     Icon: IconTasks     },
+  { label: 'Browse Tasks', path: '/talent/browse-tasks', Icon: IconBriefcaseBusiness },
 ];
 
 const TalentSidebar = () => {

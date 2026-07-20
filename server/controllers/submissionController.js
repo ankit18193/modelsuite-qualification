@@ -1,4 +1,4 @@
-﻿const Submission = require('../models/Submission');
+const Submission = require('../models/Submission');
 const Task = require('../models/Task');
 
 // @desc  Submit a task with a file upload
@@ -111,8 +111,13 @@ const reviewSubmission = async (req, res) => {
     if (!submission) {
       return res.status(404).json({ message: 'Submission not found' });
     }
-    // — task stays 'Submitted' even after the submission is Approved/Rejected
-    // Proper flow: also update Task.status to 'Approved'/'Rejected'
+
+    // Only update Task.status if the reviewStatus is one of: Approved, Rejected
+    if (['Approved', 'Rejected'].includes(reviewStatus) && submission.taskId) {
+      await Task.findByIdAndUpdate(submission.taskId._id, { status: reviewStatus });
+      // Update local populated reference so the returned JSON has the fresh task status
+      submission.taskId.status = reviewStatus;
+    }
 
     res.json(submission);
   } catch (error) {

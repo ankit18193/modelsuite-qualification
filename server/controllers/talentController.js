@@ -7,9 +7,14 @@ const simulateNotification = require('../utils/notificationSimulator');
 const getAvailableTasks = async (req, res) => {
   try {
     // (loose schema allows this inconsistent state from seed data)
-    const tasks = await Task.find({ status: 'Open' })
-      .populate('createdBy', 'name')
-      .sort({ createdAt: -1 });
+    const tasks = await Task.find({ status: 'Open',
+      $or: [
+       { assignedTo: null },
+       { assignedTo: req.user._id }
+      ]
+    })
+    .populate('createdBy', 'name')
+    .sort({ createdAt: -1 });
 
     res.json(tasks);
   } catch (error) {
