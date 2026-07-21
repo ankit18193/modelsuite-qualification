@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import API from '../api/axios';
+import { withMinimumDelay } from "../utils/withMinimumDelay";
 
 const Logo = () => (
   <img src="/modelsuite-talents.png" alt="ModelSuite Talents Logo" className="w-80 h-auto object-contain mx-auto block hover:scale-105 transition-transform duration-300" />
@@ -11,19 +12,30 @@ const inputCls = 'w-full bg-bg-input border border-border rounded-[10px] px-4 py
 const labelCls = 'text-[11px] font-semibold uppercase tracking-[0.6px] text-text-muted group-focus-within:text-primary transition-colors duration-200';
 
 const LoginPage = () => {
-  const [email, setEmail]       = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login }   = useAuth();
-  const navigate    = useNavigate();
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false); // set loading to false
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
     try {
-      const { data } = await API.post('/auth/login', { email, password });
+      setLoading(true);  // set loading to true
+      const { data } = await withMinimumDelay(
+        API.post("/auth/login", {
+          email,
+          password,
+        }),
+        600
+      );
       login(data);
       data.role === 'Admin' ? navigate('/admin/dashboard') : navigate('/talent/dashboard');
     } catch (err) {
       alert(err.response?.data?.message || 'Login failed');
+    } finally {
+      setLoading(false); // set loading to false
     }
   };
 
@@ -53,9 +65,18 @@ const LoginPage = () => {
               value={password} onChange={(e) => setPassword(e.target.value)} required className={inputCls} />
           </div>
 
-          <button type="submit"
-            className="mt-1.5 w-full py-3.5 rounded-[10px] text-[15px] font-semibold text-white cursor-pointer btn-gradient border-none hover:scale-[1.02] active:scale-[0.98] transition-transform duration-200">
-            Sign In
+          <button
+            type="submit"
+            disabled={loading}
+            className={`mt-1.5 w-full py-3.5 rounded-[10px] text-[15px] font-semibold text-white btn-gradient border-none transition-transform duration-400 
+              ${loading
+                ? 'opacity-70 cursor-not-allowed'
+                : 'cursor-pointer hover:scale-[1.02] active:scale-[0.98]'
+              }`
+            }
+          >
+
+            {loading ? 'Signing In...' : 'Sign In'}
           </button>
         </form>
 
@@ -70,7 +91,7 @@ const LoginPage = () => {
       {/* ── Right: Visual panel ── */}
       <div className="hidden lg:flex flex-col items-center justify-center relative overflow-hidden p-16 animate-fade-in min-h-screen"
         style={{ background: 'linear-gradient(140deg, #050505 0%, #111111 50%, #000000 100%)', animationDelay: '0.1s', animationFillMode: 'both' }}>
-        
+
         {/* Top Right Info Icon */}
         <div className="absolute top-12 right-12 group z-50">
           <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/5 border border-white/10 text-text-muted hover:text-white hover:bg-white/10 transition-all duration-300 cursor-help">
@@ -80,14 +101,14 @@ const LoginPage = () => {
               <line x1="12" y1="8" x2="12.01" y2="8"></line>
             </svg>
           </div>
-          
+
           {/* Tooltip Popup */}
           <div className="absolute right-0 top-14 w-[340px] p-6 rounded-2xl bg-[#0D0D0D]/95 backdrop-blur-xl border border-white/10 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.8)] opacity-0 translate-y-3 invisible group-hover:opacity-100 group-hover:translate-y-0 group-hover:visible transition-all duration-300">
             <h3 className="text-white font-bold text-[15px] mb-4 font-display">Intern Selection Flow</h3>
             <ol className="flex flex-col gap-4 relative">
               {/* Vertical line */}
               <div className="absolute left-[9px] top-2 bottom-2 w-[2px] bg-white/10 rounded-full"></div>
-              
+
               <li className="flex items-start gap-4 relative opacity-0 -translate-x-3 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 delay-100">
                 <div className="w-[20px] h-[20px] rounded-full bg-[#10B981] flex-shrink-0 mt-0.5 border-[3px] border-[#0D0D0D] relative z-10 shadow-[0_0_12px_rgba(16,185,129,0.5)] animate-pulse"></div>
                 <div>
@@ -130,7 +151,7 @@ const LoginPage = () => {
               ))}
           </div>
         </div>
-        
+
         {/* Full-width Marquee Ticker */}
         <div className="absolute bottom-16 left-0 w-full marquee-container animate-fade-slide" style={{ animationDelay: '0.6s', animationFillMode: 'both' }}>
           <div className="animate-marquee gap-16">
