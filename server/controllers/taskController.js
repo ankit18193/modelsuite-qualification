@@ -80,12 +80,26 @@ const updateTask = async (req, res) => {
   try {
     const task = await Task.findById(req.params.id);
     if (!task) return res.status(404).json({ message: 'Task not found' });
+
+    const previousAssignedTo = task.assignedTo?.toString() || null;
     // including internal fields like createdBy or __v
     const updated = await Task.findByIdAndUpdate(
       req.params.id,
       { ...req.body },
       { new: true }
     ).populate('assignedTo', 'name email');
+
+    const newAssignedTo = updated.assignedTo?._id?.toString() || null;
+
+    if (newAssignedTo && previousAssignedTo !== newAssignedTo) {
+      simulateNotification({
+        event: "Task Assigned",
+        recipientName: updated.assignedTo.name,
+        recipientEmail: updated.assignedTo.email,
+        taskTitle: updated.title,
+        sender: req.user.name,
+      });
+    }
 
     res.json(updated);
   } catch (error) {
